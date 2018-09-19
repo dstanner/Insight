@@ -1,0 +1,40 @@
+# Ignore raw data
+/object_detection/ref_img_cropping/raw_images/
+/object_detection/ref_img_cropping/cropped_images/
+/object_detection/ref_img_cropping/bounded_images/
+/img_scraping/raw_ref_img/
+/img_scraping/messy_image_scraping/
+/img_scraping/item_info/
+/img_scraping/urls/
+/object_detection/ref_img_cropping/.idea/
+/object_detection/ref_img_cropping/cropping_fails.csv
+/web/setup/.ipynb_checkpoints/flask_dev_setup-checkpoint.ipynb
+/web/setup/flask_dev_setup.ipynb
+
+# General
+.DS_Store
+.AppleDouble
+.LSOverride
+
+# Icon must end with two \r
+Icon
+
+
+# Thumbnails
+._*
+
+# Files that might appear in the root of a volume
+.DocumentRevisions-V100
+.fseventsd
+.Spotlight-V100
+.TemporaryItems
+.Trashes
+.VolumeIcon.icns
+.com.apple.timemachine.donotpresent
+
+# Directories potentially created on remote AFP share
+.AppleDB
+.AppleDesktop
+Network Trash Folder
+Temporary Items
+.apdisk
