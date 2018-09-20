@@ -60,7 +60,7 @@ for ind, img in enumerate(image_list):
         net.setInput(blob)
         detections = net.forward()
 
-        plt.figure(figsize = (10, 6))
+        plt.figure(figsize=(16, 10))
         plt.imshow(image)
 
         current_axis = plt.gca()

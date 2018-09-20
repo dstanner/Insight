@@ -10,6 +10,8 @@
 /object_detection/ref_img_cropping/cropping_fails.csv
 /web/setup/.ipynb_checkpoints/flask_dev_setup-checkpoint.ipynb
 /web/setup/flask_dev_setup.ipynb
+/object_detection/feature_extraction/ref_img_features.npy
+/object_detection/feature_extraction/ref_img_filemapping.json
 
 # General
 .DS_Store
