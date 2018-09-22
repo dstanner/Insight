@@ -16,6 +16,7 @@
 output.png
 quickplot.py
 __pycache__
+web/uploads/
 
 # General
 .DS_Store
