@@ -1,12 +1,12 @@
 import pandas as pd
-import os
+import string
+
 
 # %%
-os.chdir('/Users/Darren/Documents/GitHub/Insight/img_scraping/src')
 
-totalwine = pd.read_csv('../item_info/totalwine_info.csv')
-liquormart = pd.read_csv('../item_info/liquormart_info.csv')
-winetoship = pd.read_csv('../item_info/winetoship_info.csv')
+totalwine = pd.read_csv('./img_scraping/item_info/totalwine_info.csv')
+liquormart = pd.read_csv('./img_scraping/item_info/liquormart_info.csv')
+winetoship = pd.read_csv('./img_scraping/item_info/winetoship_info.csv')
 
 totalwine['source'] = 'totalwine'
 liquormart['source'] = 'liquormart'
@@ -20,7 +20,7 @@ all_cats = list(combined.Category.unique())
 
 rem_cats = ['Ready to Drink', 'Ready To Drink', 'Unavailable',
             'Pre-Mixed Cocktails', 'Prepared Cocktails', 'Colorado', '1',
-            'Kentucky', 'Creams', 'USA', 'Mexico', 'Bitters', '2013', 'Canada',
+            'Kentucky', 'Creams', 'USA', 'Mexico', '2013', 'Canada',
             'Missouri', 'Italy', 'Bonded Whiskey', 'Holland', '2011',
             'Sloe Gins & Gin Specialties', 'Islay', 'California',
             'Scottish Ale', 'Fruity', 'Online Beer', 'Norway', 'Red Wines',
@@ -30,11 +30,15 @@ rem_cats = ['Ready to Drink', 'Ready To Drink', 'Unavailable',
             'Pisco', 'Dessert & Fortified Wine',
             "Robert Parker's Wine Advocate", 'Ireland', 'Light Lageer',
             'Table Wines', 'Gluten-Free', 'Coolers & Malt Beverages',
-            'Stout', '18', '2012', 'Light Lager']
+            'Stout', '18', '2012', 'Light Lager', 'Grappa']
 
 keep_cats = list(filter(lambda x: x not in rem_cats, all_cats))
 
 combined = combined.loc[combined['Category'].isin(keep_cats)]
+
+# Now get rid of duplicated names and reindex
+combined.drop_duplicates(subset="Name", inplace=True)
+combined.reset_index(drop=True, inplace=True)
 
 # %% Recode old categories to new categories
 combined["Cat"] = combined["Category"]
@@ -46,32 +50,99 @@ replace_dict = {
     'Scotch': ['Scotch', 'Single Malt Scotch', 'Scotch Whisky',
                'Blended Whiskey'],
     'Tequila': ['Tequila'],
-    'Bourbon': ['Bourbon'],
     'Whiskey': ['American Whiskey', 'Canadian Whisky', 'Whisky',
                 'Irish Whiskey', 'Whiskey', 'Other Imported Whiskey',
                 'Straight Whiskey', 'Tennessee Whiskey',
                 'Japanese Whisky', 'Small Batch & Single Barrel Bourbon',
-                'Corn Whiskey'],
+                'Corn Whiskey', 'Bourbon'],
     'Gin': ['Gin', 'Gins & Genevers - Imported', 'Gins - Domestic'],
     'Moonshine': ['White Whiskey/Moonshine'],
     'Flavored Vodka': ['Vodka - Flavored'],
     'Liqueur': ['Liqueur', 'Cordials & Liqueurs - Domestic',
                 'Cordials & Liqueurs - Imported', 'Liqueurs/Cordials/Schnapps',
-                'Cordials'],
-    'Cognac': ['Cognac', 'Cognacs', 'Armagnac'],
+                'Cordials', 'Liquer'],
     'Brandy': ['Brandy', 'Fruit Brandies', 'Brandies - Imported',
-               'Calvados', 'Brandy & Cognac'],
+               'Calvados', 'Brandy & Cognac', 'Brandies - Domestic',
+               'Cognac', 'Cognacs', 'Armagnac'],
     'Soju': ['Soju', 'Shochu'],
     'Schnapps': ['Schnapps'],
-    'Grappa': ['Grappa'],
     'Flavored Whiskey': ['Flavored Whiskies'],
     'Aperitifs': ['Aperitifs'],
     'Cachaca': ['Cachaca'],
     'Absinthe': ['Absinthe']
 }
 
-# %% Recode old original categories into broad cat labels
-
+# Recode old original categories into broad cat labels
 new_replace = {v: key for key, vals in replace_dict.items() for v in vals}
 combined['Cat'] = combined['Category'].replace(new_replace)
-combined.to_csv('../item_info/all_item_info_categorized.csv', index=False)
+combined
+
+# %% Pull out some other useful categories for liquers from item names
+
+other_cats = {'Triple sec/Cointreau/Orange liqueurs': ['triplesec',
+                                                       'cointreau',
+                                                       'grangala',
+                                                       'grandmarnier'],
+              'Anise Liqueur': ['anisette', 'arak', 'galliano',
+                                'herbsaint', 'ouzo', 'pastis',
+                                'pernod', 'ricard', 'sambuca'],
+              'Amaretto': ['amaretto'],
+              'Baileys': ['baileys'],
+              'Campari': ['campari'],
+              'Frangelico': ['frangelico'],
+              'Coffee Liqueur': ['kahlua', 'coffee', 'caferica',
+                                 'tiamaria', 'starbucks'],
+              'Flower liqueur': ['stgermain', 'cremedeviolette',
+                                 'cremeyvette', 'rosolio'],
+              'Cherry liqueur': ['cherryheering', 'guignolet', 'maraschino'],
+              'Benedictine': ['benedictine'],
+              'Canton': ['canton'],
+              "Aperol": ['aperol'],
+              'Chambord': ['chambord'],
+              'Chartreuse': ['chartreuse'],
+              'Creme de Casis': ['cremedecasis'],
+              'Creme de Coconut': ['cremedecoconut'],
+              'Creme de Framboise': ['cremedeframboise'],
+              'Creme de Menthe': ['cremedementhe'],
+              'Cynar': ['cynar'],
+              'Fernet': ['fernet'],
+              'Jaegermeiseter': ['jaegermeister'],
+              "Lemoncello": ['lemoncello'],
+              'Midori': ['midori'],
+              'Peppermint Schnapps': ['peppermintschnapps'],
+              "Pimm's": ['pimms'],
+              'Southern Comfort': ['southerncomfort'],
+              'Tuaca': ['tuaca'],
+              'Curaco': ['curaco']}
+
+# Turn the values into keys
+new_other = {v: key for key, vals in other_cats.items() for v in vals}
+
+# Get names with punctuation and spaces removed, and lowercase
+nms = combined.Name.astype('str').tolist()
+
+# Clear punctuation
+punc = string.punctuation  # Get punctuation
+punc_replace_dict = {punct: None for punct in punc}
+punc_replace_trans = nms[0].maketrans(punc_replace_dict)
+nms = [x.translate(punc_replace_trans) for x in nms]
+nms = [x.replace(" ", "").lower() for x in nms]
+
+# Get indicies to replace
+replace_inds = []
+name_match = []
+new_cat = []
+for ind, item in enumerate(nms):
+    for name, cat in new_other.items():
+        if name in item:
+            replace_inds.append(ind)
+            name_match.append(name)
+            new_cat.append(cat)
+
+# Replace those entries in combined with new category labels
+combined.Cat.iloc[replace_inds] = new_cat
+
+# %% Save the file
+
+combined.to_csv('./img_scraping/item_info/all_item_info_categorized.csv',
+                index=False)
