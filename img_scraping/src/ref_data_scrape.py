@@ -164,10 +164,9 @@ item_data.to_csv('../item_info/totalwine_info.csv', index=False)
 # %% Get totalwine images
 
 totalwine_image_urls = pd.read_csv('../urls/totalwine_image_urls.csv')
-
 totalwine_item_data = pd.read_csv('../item_info/totalwine_info.csv')
-
 totalwine_item_data['Name'] = totalwine_item_data['Name'].str.replace(' ', '_')
+total
 
 totalwine_skip_urls = [('https://www.totalwine.com//media/sys_master/',
                         'twmmedia/ha2/h31/8824572280862.png'),

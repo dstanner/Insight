@@ -17,6 +17,9 @@ output.png
 quickplot.py
 __pycache__
 web/uploads/
+/object_detection/ref_img_cropping/converted_images/
+/object_detection/cat_organized_ref_img/
+/vector_search/__pycache__/
 
 # General
 .DS_Store
