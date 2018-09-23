@@ -1,11 +1,3 @@
-#!/usr/bin/env python3
-# -*- coding: utf-8 -*-
-"""
-Created on Mon Sep 17 21:18:47 2018
-
-@author: Darren
-"""
-
 # import the necessary packages
 import numpy as np
 import cv2
@@ -14,12 +6,11 @@ import os
 import sys
 import pandas as pd
 
+
 fails = []
+folder = './object_detection/ref_img_cropping/'
 
 plt.ioff()  # turn off interactive mode for image processing
-
-os.chdir('/Users/Darren/Documents/GitHub/Insight/' +
-         'object_detection/ref_img_cropping')
 
 # Set confidence level for retaining bounding box
 conf = .4
@@ -32,14 +23,17 @@ classes = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle",
            "sofa", "train", "tvmonitor"]
 
 # load our serialized model from disk
-net = cv2.dnn.readNetFromCaffe('./model/MobileNetSSD_deploy.prototxt.txt',
-                               './model/MobileNetSSD_deploy.caffemodel')
+net = cv2.dnn.readNetFromCaffe(folder + ('model/MobileNetSSD_deploy'
+                                         '.prototxt.txt'),
+                               (folder + ('/model/MobileNetSSD_deploy'
+                                          '.caffemodel')))
 
 # Get list of image files
-image_list = os.listdir('./raw_images/')
+image_list = os.listdir(folder + 'converted_images/')
 image_list = [x for x in image_list if '.DS_Store' not in x]
-image_list = ['./raw_images/' + x for x in image_list]
+image_list = [folder + 'converted_images/' + x for x in image_list]
 
+image_list
 # Loop over images.
 # First resize to a fixed 300x300 pixels and then normalizing it
 # (note: normalization is done via the authors of the MobileNet SSD
@@ -49,8 +43,8 @@ for ind, img in enumerate(image_list):
     print('Processing image ', str(ind+1))
 
     try:
-        picname = img.replace('./raw_images/', '')
-        image = plt.imread(img)
+        picname = img.replace('./object_detection/ref_img_cropping/converted_images/', '')
+        image = cv2.imread(img)
         (h, w) = image.shape[:2]
         blob = cv2.dnn.blobFromImage(cv2.resize(image, (300, 300)),
                                      0.007843, (300, 300), 127.5)
@@ -60,10 +54,11 @@ for ind, img in enumerate(image_list):
         net.setInput(blob)
         detections = net.forward()
 
-        plt.figure(figsize=(16, 10))
-        plt.imshow(image)
+        # plt.figure(figsize=(12,12))
+        # plt.imshow(image)
 
-        current_axis = plt.gca()
+        # current_axis = plt.gca()
+
 
         # loop over the detections
         for i in np.arange(0, detections.shape[2]):
@@ -81,34 +76,35 @@ for ind, img in enumerate(image_list):
 
                 # Only do this if a bottle is detected
                 if idx == 5:
-                    box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
+                    box = detections[0, 0, i, 3:7]*np.array([w, h, w, h])
                     box_int = box.astype('int')
 
                     # Crop each bottle out, then save it as a separate file
                     new_image = image[box_int[1]:box_int[3],
                                       box_int[0]:box_int[2]]
-                    new_filename = ('./cropped_images/crop_' +
+                    new_filename = (folder + 'cropped_images/crop_' +
                                     str(i) + '_' + picname)
+                    new_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
                     plt.imsave(new_filename, new_image)
 
                     # display the prediction
-                    color = (1, 0, 0, 1)
-                    label = "{}: {:.2f}%".format(classes[idx], confidence)
-                    current_axis.add_patch(plt.Rectangle((box_int[0],
-                                                          box_int[1]),
-                                                         box_int[2]-box_int[0],
-                                                         box_int[3]-box_int[1],
-                                                         color=color,
-                                                         fill=False,
-                                                         linewidth=2))
-                    current_axis.text(box_int[0], box_int[1], label,
-                                      size='x-large',
-                                      color='white',
-                                      bbox={'facecolor': color, 'alpha': 1.0})
+                    # color = (1, 0, 0, 1)
+                    # label = "{}: {:.2f}%".format(classes[idx], confidence)
+        #             current_axis.add_patch(plt.Rectangle((box_int[0],
+        #                                                   box_int[1]),
+        #                                                  box_int[2]-box_int[0],
+        #                                                  box_int[3]-box_int[1],
+        #                                                  color=color,
+        #                                                  fill=False,
+        #                                                  linewidth=2))
+        #             current_axis.text(box_int[0], box_int[1], label,
+        #                               size='x-large',
+        #                               color='white',
+        #                               bbox={'facecolor': color, 'alpha': 1.0})
+        # out_img = plt.gcf()
+        # plt.close('all')
+        # out_img.savefig(folder + 'bounded_images/bounded_' + picname)
 
-        out_img = plt.gcf()
-        plt.close('all')
-        out_img.savefig('./bounded_images/' + picname + '.png')
 
     except Exception as e:
         tp, val, tb = sys.exc_info()
@@ -116,8 +112,4 @@ for ind, img in enumerate(image_list):
         fails.append(ex_dict)
 
 fails_df = pd.DataFrame(fails)
-fails_df.to_csv("cropping_fails.csv", index=False)
-
-# %%
-
-fails_df = pd.read_csv("cropping_fails.csv")
+fails_df.to_csv(folder + "cropping_fails.csv", index=False)
