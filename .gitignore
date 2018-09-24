@@ -15,7 +15,7 @@
 *ref_img_filemapping.json
 output.png
 quickplot.py
-__pycache__/
+/vector_search/__pycache__
 *.py[cod]
 *$py.class
 web/uploads/
