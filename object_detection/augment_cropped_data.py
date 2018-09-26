@@ -7,13 +7,14 @@ Split augmented data into training and validation sets.
 """
 from keras.preprocessing.image import ImageDataGenerator
 import os
-from itertools import repeat
-from collections import Counter
-import json
 import shutil
 import random
 import math
+from collections import Counter
+from itertools import repeat
+import json
 import pandas as pd
+
 
 # %% Make augmenter objects
 
@@ -23,9 +24,9 @@ datagen = ImageDataGenerator(
         rotation_range=20,
         width_shift_range=0.1,
         height_shift_range=0.1,
-        shear_range=0.2,
-        zoom_range=0.2,
-        horizontal_flip=True,
+        shear_range=0.25,
+        zoom_range=0.15,
+        horizontal_flip=False,
         rescale = 1./255,
         fill_mode='nearest')
 
@@ -38,11 +39,12 @@ augmenter = datagen.flow_from_directory(
     save_to_dir = './object_detection/augmented/')
 
 # %% Create and save augmented images
-# Generate 40 augmented images per image
-n_break = augmenter.n * 40
+# Generate 3 augmented images per image
+n_break = augmenter.n *3
 
 i = 0
 for batch in augmenter:
+    print(i,"/",n_break)
     i += 1
     if i == n_break:
         break
@@ -70,35 +72,28 @@ generated_files[:250]  # fixed
 
 foo = [x.split('_')[1] for x in generated_files]
 counts = Counter(foo)
-non_40_items = {k: v for k, v in counts.items() if v != 40}
-non_40_items # Item 2202 has 39 augments, the rest have 40
+non_3_items = {k: v for k, v in counts.items() if v != 3}
+non_3_items # None.
 
-# with open('./object_detection/augmented_file_list.txt', 'w') as f:
-#     f.write('\n'.join(generated_files))
+
+with open('./object_detection/augmented_file_list.txt', 'w') as f:
+    f.write('\n'.join(generated_files))
 with open('./object_detection/augmented_file_list.txt', 'r') as f:
     generated_files = f.readlines()
 generated_files = [x.replace('\n', '') for x in generated_files]
 generated_files = [x for x in generated_files if '.DS' not in x]
 
-
-# Get the item that only has 39 augmented versions
-non_40 = input_files[2202]
-
 # Now create a list of repeated input file names
 repeated_input_files = []
 for item in input_files:
-    if item == non_40:
-        repeats = repeat(item, 39)
-        repeated_input_files.extend(repeats)
-    else:
-        repeats = repeat(item, 40)
-        repeated_input_files.extend(repeats)
+    repeats = repeat(item, 3)
+    repeated_input_files.extend(repeats)
 
 # Check that the counts are correct
 counts = Counter(repeated_input_files)
-check_counts = {k: v for k, v in counts.items() if v != 40}
-check_counts.keys()
-non_40  # They're the same.  So we're good.
+check_counts = {k: v for k, v in counts.items() if v != 3}
+check_counts.keys() # All good.
+
 
 augmented_files_dictionary = dict(zip(generated_files, repeated_input_files))
 augmented_files_dictionary
@@ -109,10 +104,9 @@ with open('./object_detection/augmented_files_dictionary.json', 'w') as f:
 with open('./object_detection/augmented_files_dictionary.json', 'r') as f:
     augmented_files_dictionary = json.load(f)
 
-# %% Get rid of some image files from poor crops; I manually deleted the files
-# after visually inspecting them. Now get rid of their references in the
-# file lists
-deleted_numbers = ['_17_', '_51_', '_53_', '_55_', '_64_', '_66_',
+# %% Get rid of some image files from poor crops; I manually inspected these
+# and saw that they're not good crops.
+delete_numbers = ['_17_', '_51_', '_53_', '_55_', '_64_', '_66_',
                    '_91_', '_106_', '_107_', '_121_', '_124_', '_135_',
                    '_177_', '_193_', '_207_', '_209_', '_210_', '_225_',
                    '_235_', '_239_', '_241_', '_247_', '_280_', '_317_',
@@ -143,10 +137,16 @@ deleted_numbers = ['_17_', '_51_', '_53_', '_55_', '_64_', '_66_',
                    '_1932_', '_1933_', '_1945_', '_1954_', '_1979_', '_1984_',
                    '_1989_', '_2000_', '_2001_']
 
+# Delete these files
+path = './object_detection/augmented/'
+for file in generated_files:
+    for num in delete_numbers:
+        if num in file:
+            os.remove(path + file)
 
 
 # Remove these from the augmented_files_dictionary
-for item in deleted_numbers:
+for item in delete_numbers:
     for k in list(augmented_files_dictionary):
         if item in k:
             augmented_files_dictionary.pop(k)
@@ -158,7 +158,7 @@ Move those files into their respective category folders in the
 validation folder.
 '''
 # How many files are we starting with?
-len(augmented_files_dictionary)  # 377599
+len(augmented_files_dictionary)  # 28320
 
 # The augmented file dictionary has category info in the file name;
 # get that value and store it in a dicitonary with the augmented file name.
@@ -193,8 +193,7 @@ for cat in included_categories:
                         os.path.join(path + '/validation/' + cat + '/' + file))
     except Exception as e:
         fails.append(e)
-print(fails)
-
+print(fails)  # none
 
 # %% Now move complement set of files to /augmented/training/
 
@@ -219,9 +218,3 @@ for file in training_files:
                         path + 'training/' + cat + '/' + file)
         except Exception as e:
             fails.append(e)
-
-# Check final file counts
-# foo = []
-# for path, subdirs, files in os.walk('./object_detection/augmented/):
-#     for name in files:
-#         foo.append(os.path.join(path, name))
