@@ -3,18 +3,23 @@ import os
 import re
 from shutil import copyfile
 import json
+import string
 
 # Load metadata
 info = pd.read_csv('./img_scraping/item_info/all_item_info_categorized.csv')
 
 # Get list of cropped images
 cropped_files = os.listdir('./object_detection/ref_img_cropping/cropped_images/')
+cropped_files = [x for x in cropped_files if '.DS' not in x]
 cropped_files
 
-# Extract source_name from cropped images
-cropped_names = [re.sub('crop_[0-9]_','', x) for x in cropped_files]
-cropped_names = [re.sub('.png', '', x) for x in cropped_names]
+# Rename files, to remove all punctuation and make lowercase.
+# First, strip off the .png extension.
+cropped_names = [re.sub('.png', '', x) for x in cropped_files]
 cropped_names = [x for x in cropped_names if '.DS' not in x]
+translator = str.maketrans('', '', string.punctuation)
+cropped_names = [x.translate(translator).lower() for x in cropped_names]
+
 cropped_names
 
 
@@ -22,12 +27,13 @@ cropped_names
 sources = info.source.tolist()
 names = info.Name.tolist()
 names = [x.replace(" ", "_") for x in names]
-
+names
 
 
 source_names = []
 for i in range(len(names)):
-    source_names.append(sources[i] + '_' + names[i])
+    source_names.append(sources[i] + names[i])
+source_names = [x.translate(translator).lower() for x in source_names]
 source_names
 
 # Get categories from df
@@ -37,9 +43,12 @@ info.Cat.nunique()
 pic_categories = {}
 for name in cropped_names:
     for ind, string in enumerate(source_names):
-        if name in string:
+        if string in name:
             pic_categories[name] = cats[ind]
 
+len(set(pic_categories.keys()))
+
+pic_categories
 included_categories = list(set(pic_categories.values()))
 
 # Make directories for each category
@@ -54,14 +63,13 @@ source_dir = './object_detection/ref_img_cropping/cropped_images/'
 dest_dir = './object_detection/cat_organized_ref_img/'
 
 # copy files to category directories, and save a dictionary
-pic_lookup_dictionary = {}
 for name, cat in pic_categories.items():
-    for file in cropped_files:
-        if name in file:
-            #copyfile(source_dir + file, dest_dir + cat + '/' + file)
-            pic_lookup_dictionary[file] = cat
+    for idx, file in enumerate(cropped_names):
+        if file in name:
+            source_path = os.path.join(source_dir, cropped_files[idx])
+            new_path = os.path.join(dest_dir, cat, name + '.png')
+            copyfile(source_path, new_path)
 
-pic_lookup_dictionary
 
-with open('pic_lookup_dictionary.json', 'w') as f:
-    json.dump(pic_lookup_dictionary, f)
+with open('./object_detection/pic_lookup_dictionary.json', 'w') as f:
+    json.dump(pic_categories, f)

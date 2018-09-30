@@ -114,7 +114,7 @@ totalwine_img_urls.to_csv('../urls/totalwine_image_urls.csv', index=False)
 
 # %% Get metadata from totalwine
 
-with open('../urls/totalwine_item_urls.txt', 'r') as f:
+with open('./img_scraping/urls/totalwine_item_urls.txt', 'r') as f:
     totalwine_item_urls = f.readlines()
 
 # Get rid of nl character
@@ -163,10 +163,10 @@ item_data.to_csv('../item_info/totalwine_info.csv', index=False)
 
 # %% Get totalwine images
 
-totalwine_image_urls = pd.read_csv('../urls/totalwine_image_urls.csv')
-totalwine_item_data = pd.read_csv('../item_info/totalwine_info.csv')
+totalwine_image_urls = pd.read_csv('./img_scraping/urls/totalwine_image_urls.csv')
+totalwine_item_data = pd.read_csv('./img_scraping/item_info/totalwine_info.csv')
 totalwine_item_data['Name'] = totalwine_item_data['Name'].str.replace(' ', '_')
-total
+totalwine_item_data.to_csv('./img_scraping/item_info/totalwine_info.csv', index = False)
 
 totalwine_skip_urls = [('https://www.totalwine.com//media/sys_master/',
                         'twmmedia/ha2/h31/8824572280862.png'),
@@ -320,8 +320,10 @@ item_data.to_csv('../item_info/liquormart_info.csv', index = False)
 
 #%% Get liquormart images
 
-liquormart_item_info = pd.read_csv('../item_info/liquormart_info.csv')
-liquormart_img_urls = pd.read_csv('../urls/liquormart_image_urls.csv')
+liquormart_item_info = pd.read_csv('./img_scraping/item_info/liquormart_info.csv')
+liquormart_img_urls = pd.read_csv('./img_scraping/urls/liquormart_image_urls.csv')
+liquormart_item_info['Name'] = liquormart_item_info['Name'].str.replace(" ", "_").str.replace('/', '_')
+liquormart_item_info.to_csv('./img_scraping/item_info/liquormart_info.csv', index= False)
 
 skip_url = 'https://www.liquormart.com/media/catalog/product/cache/1/image/364x/9df78eab33525d08d6e5fb8d27136e95/placeholder/default/placeholder_1.jpg'
 

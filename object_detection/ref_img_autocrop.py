@@ -13,7 +13,7 @@ folder = './object_detection/ref_img_cropping/'
 plt.ioff()  # turn off interactive mode for image processing
 
 # Set confidence level for retaining bounding box
-conf = .4
+conf = .85
 
 # initialize the list of class labels MobileNet SSD was trained to
 # detect, then generate a set of bounding box colors for each class
@@ -33,7 +33,6 @@ image_list = os.listdir(folder + 'converted_images/')
 image_list = [x for x in image_list if '.DS_Store' not in x]
 image_list = [folder + 'converted_images/' + x for x in image_list]
 
-image_list
 # Loop over images.
 # First resize to a fixed 300x300 pixels and then normalizing it
 # (note: normalization is done via the authors of the MobileNet SSD
@@ -54,12 +53,13 @@ for ind, img in enumerate(image_list):
         net.setInput(blob)
         detections = net.forward()
 
-        # plt.figure(figsize=(12,12))
-        # plt.imshow(image)
+        fig, ax = plt.subplots()
+        ax.imshow(image)
 
-        # current_axis = plt.gca()
+        current_axis = plt.gca()
 
-
+        # Count the number of detections per image
+        detects = 0
         # loop over the detections
         for i in np.arange(0, detections.shape[2]):
             # extract the confidence (i.e., probability) associated with the
@@ -69,6 +69,7 @@ for ind, img in enumerate(image_list):
             # filter out weak detections by ensuring the `confidence` is
             # greater than the minimum confidence
             if confidence > conf:
+                detects += 1
                 # extract the index of the class label from the `detections`,
                 # then compute the (x, y)-coordinates of the bounding box for
                 # the object
@@ -83,27 +84,32 @@ for ind, img in enumerate(image_list):
                     new_image = image[box_int[1]:box_int[3],
                                       box_int[0]:box_int[2]]
                     new_filename = (folder + 'cropped_images/crop_' +
-                                    str(i) + '_' + picname)
+                                    str(detects) + '_' + picname)
                     new_image = cv2.cvtColor(new_image, cv2.COLOR_BGR2RGB)
                     plt.imsave(new_filename, new_image)
 
-                    # display the prediction
-                    # color = (1, 0, 0, 1)
-                    # label = "{}: {:.2f}%".format(classes[idx], confidence)
-        #             current_axis.add_patch(plt.Rectangle((box_int[0],
-        #                                                   box_int[1]),
-        #                                                  box_int[2]-box_int[0],
-        #                                                  box_int[3]-box_int[1],
-        #                                                  color=color,
-        #                                                  fill=False,
-        #                                                  linewidth=2))
-        #             current_axis.text(box_int[0], box_int[1], label,
-        #                               size='x-large',
-        #                               color='white',
-        #                               bbox={'facecolor': color, 'alpha': 1.0})
-        # out_img = plt.gcf()
-        # plt.close('all')
-        # out_img.savefig(folder + 'bounded_images/bounded_' + picname)
+                    #display the prediction
+                    color = (1, 0, 0, 1)
+                    label = "{}: {:.2f}%".format(classes[idx], confidence)
+                    ax.add_patch(plt.Rectangle((box_int[0],box_int[1]),
+                                               box_int[2]-box_int[0],
+                                               box_int[3]-box_int[1],
+                                               color=color,
+                                               fill=False,
+                                               linewidth=2))
+                    ax.text(box_int[0], box_int[1], label,
+                                      size='x-large',
+                                      color='white',
+                                      bbox={'facecolor': color, 'alpha': 1.0})
+
+
+
+        # plt.savefig(folder + 'bounded_images/bounded_' + picname)
+
+        if detects == 0:
+            image = cv2.cvtColor(image, cv2.COLOR_BGR2RGB)
+            new_filename = folder + 'cropped_images/crop_0_' + picname
+            plt.imsave(new_filename, image)
 
 
     except Exception as e:
