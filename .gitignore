@@ -15,7 +15,7 @@
 *ref_img_filemapping.json
 output.png
 quickplot.py
-/vector_search/__pycache__
+*__pycache__*
 *.py[cod]
 *$py.class
 web/uploads/
@@ -34,6 +34,14 @@ item.json
 *headless*
 *ref_img_index.ann
 /demo_files/
+/img_scraping/validation/
+/cocktail/
+/object_detection/feature_extraction/
+/object_detection/augmented_annoy_distance_results.txt
+/object_detection/augmented_annoy_index_results.txt
+/object_detection/augmented_file_mapping.json
+object_detection/pic_lookup_dictionary.json
+
 
 
 # General

@@ -9,50 +9,27 @@ import cv2
 import numpy as np
 import pandas as pd
 import matplotlib.pyplot as plt
-from vector_search import vector_search as vs
+from web_vector_search import vector_search as vs
+from web_vector_search import model_mapping
+from web_vector_search import lookup_functions
 import annoy
 from PIL import Image as PILImage
 from keras.models import load_model
 import tensorflow as tf
 
-# Load net for SDD image segmentation CNN
-ssd_cnn = cv2.dnn.readNetFromCaffe(('./model_files/SSDmodel'
-                                    '/MobileNetSSD_deploy.prototxt.txt'),
-                                   ('./model_files/SSDmodel'
-                                    '/MobileNetSSD_deploy.caffemodel'))
-# Define object classes
-classes = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle",
-           "bus", "car", "cat", "chair", "cow", "diningtable",
-           "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
-           "sofa", "train", "tvmonitor"]
-conf = .4  # set minimum confidence for SSD bounding box
-
-# Load feature extraction CNN
-feature_cnn = load_model('./model_files/headlessVGG16.h5')
-graph = tf.get_default_graph()
-
-
-# Load lookup files
-with open('./model_files/source.json', 'r') as f:
-    source = json.load(f)
-with open('./model_files/item.json', 'r') as f:
-    item = json.load(f)
-item_info = pd.read_csv(('./model_files/all_item_info_categorized.csv'))
-with open('./model_files/ref_img_filemapping.json',
-          'r') as f:
-    mapping = json.load(f)
-
-
-ref_db = annoy.AnnoyIndex(4096, metric='angular')
-ref_db.load('./model_files/ref_img_index.ann')
-
-app.config['UPLOAD_FOLDER'] = "./uploads/"
+app.config.update(dict(
+        UPLOAD_FOLDER = "./flasklib/static/uploads/",
+        DISPLAY_FOLDER = "./flasklib/static/display/",
+        TEMP_FOLDER = "./static/uploads/"
+        ))
 ALLOWED_EXTENSIONS = set(['png', 'jpg', 'jpeg'])
 
 def allowed_file(filename):
     return '.' in filename and \
            filename.rsplit('.', 1)[1].lower() in ALLOWED_EXTENSIONS
 
+
+recipe_idx = 0
 
 @app.route('/')
 @app.route('/index')
@@ -76,87 +53,62 @@ def upload_file():
             flash('No selected file')
             return redirect(request.url)
         if file and allowed_file(file.filename):
+            global filename
             filename = secure_filename(file.filename)
-            file.save(os.path.join(app.config['UPLOAD_FOLDER'], filename))
+            filepath = os.path.join(app.config['UPLOAD_FOLDER'], filename)
+            file.save(filepath)
+            print(filepath)
 
-    # Now do stuff do it
-    img = cv2.imread(os.path.join(app.config['UPLOAD_FOLDER'], filename))
-    (h, w) = img.shape[:2]
-    blob = cv2.dnn.blobFromImage(cv2.resize(img, (300, 300)),
-                                 0.007843, (300, 300), 127.5)
+        inds, dists, boxes = model_mapping.retrieve_img_data(filepath)
 
-    # Run the SSD
-    ssd_cnn.setInput(blob)
-    detections = ssd_cnn.forward()
+        if inds == "No match":
+            cocktail_name = "I don't have any matches for your bottles."
+            instructions = ("I couldn't find any good matches for the "
+                            "bottle(s) in your picture in my database.\n\n"
+                            "You can try uploading the picture again.\n\n"
+                            "Make sure that any bottles are standing upright, "
+                            "are clearly visible, "
+                            "and that the labels are facing the camera.")
+            ingredient_table = ""
+        elif inds == "None":
+            cocktail_name = "I didn't detect any bottles."
+            instructions = ("I couldn't see any bottles in your picture.\n\n"
+                            "You can try uploading the picture again.\n\n"
+                            "Make sure that any bottles are standing upright, "
+                            "are clearly visible, "
+                            "and that the labels are facing the camera.")
+            ingredient_table = ""
+        else:
+            output = lookup_functions.return_output(inds)
+            global choices
+            choices = lookup_functions.get_choices(output)
+            recipe = lookup_functions.get_recipe(choices, recipe_idx)
+            cocktail_name, instructions, ingredient_table = lookup_functions.format_recipe(recipe)
 
-    # Get sliced bottles
-    out_images = []
-    for i in np.arange(0, detections.shape[2]):
-        # extract the confidence associated with the prediction
-        confidence = detections[0, 0, i, 2]
+        display_path = os.path.join(app.config['TEMP_FOLDER'], filename)
 
-        # filter out weak detections by ensuring the confidence is
-        # greater than the minimum confidence
-        if confidence > conf:
-            # extract the index of the class label from the `detections`,
-            # then compute the (x, y)-coordinates of the bounding box for
-            # the object
-            idx = int(detections[0, 0, i, 1])
+    return render_template("output.html",
+                           cocktail_name=cocktail_name,
+                           instructions=instructions,
+                           ingredient_table=ingredient_table,
+                           filepath=display_path)
 
-            # Only do this if a bottle is detected
-            if idx == 5:
-                box = detections[0, 0, i, 3:7] * np.array([w, h, w, h])
-                box_int = box.astype('int')
 
-                # Crop each bottle out, then save it as a separate file
-                out_images.append(img[box_int[1]:box_int[3],
-                                      box_int[0]:box_int[2]])
+@app.route('/shake', methods=['POST', 'GET'])
+def new_recipe():
 
-    pil_images = [cv2.cvtColor(pic, cv2.COLOR_BGR2RGB) for pic in out_images]
-    pil_images = [PILImage.fromarray(pic) for pic in pil_images]
+    # update recipe index
+    global recipe_idx
+    recipe_idx += 1
 
-    feats = []
-    global graph
-    for pic in pil_images:
-        with graph.as_default():
-            features = vs.generate_features_img(pic, feature_cnn)
-            feats.append(features)
+    # Get a new recipe for that index
+    recipe = lookup_functions.get_recipe(choices, recipe_idx)
+    cocktail_name, instructions, ingredient_table = lookup_functions.format_recipe(recipe)
 
-    # Reshape and convert to list
-    feats = [x.reshape(x.shape[1]) for x in feats]
-    feats = [x.tolist() for x in feats]
+    display_path = os.path.join(app.config['TEMP_FOLDER'], filename)
 
-    match_list = []
-    for pic in feats:
-        [ind, dist] = vs.search_index_by_value(pic, ref_db, mapping)
-        match_list.append((ind, dist))
-
-    # Get just indices from match_list
-    best_inds = [x[0] for x in match_list]
-    best_inds = [item for sublist in best_inds for item in sublist]
-
-    # Lookup names for best inds
-    best_names = [item[str(x)] for x in best_inds]
-
-    best_cats = [item_info['Cat']
-                 .loc[item_info['Name'] == x].to_string(index=False)
-                 for x in best_names]
-
-    # remove redundancies
-    short_best_names = []
-    for x in best_names:
-        if x not in short_best_names:
-            short_best_names.append(x)
-
-    short_best_cats = []
-    for x in best_cats:
-        if x not in short_best_cats:
-            short_best_cats.append(x)
-
-    names_string = ', '.join(short_best_names)
-    cats_string = ', '.join(short_best_cats)
-
-    return render_template("output.html", names_string = names_string,
-                           cats_string = cats_string)
-
-item_info
+    return render_template("shake.html",
+                           cocktail_name=cocktail_name,
+                           instructions=instructions,
+                           ingredient_table=ingredient_table,
+                           filepath=display_path)
