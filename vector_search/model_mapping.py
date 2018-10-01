@@ -10,22 +10,23 @@ from PIL import Image as PILImage
 from keras.models import load_model
 from keras.applications.vgg16 import preprocess_input
 from keras.preprocessing import image
+import tensorflow as tf
 
 # %% Load CNNs
 
 # Load net for SDD image segmentation
-ssd_cnn = cv2.dnn.readNetFromCaffe(('./object_detection/ref_img_cropping'
-                                    '/model/MobileNetSSD_deploy.prototxt.txt'),
-                                   ('./object_detection/ref_img_cropping'
-                                    '/model/MobileNetSSD_deploy.caffemodel'))
+ssd_cnn = cv2.dnn.readNetFromCaffe(('./object_detection/ref_img_cropping/model'
+                                    '/MobileNetSSD_deploy.prototxt.txt'),
+                                   ('./object_detection/ref_img_cropping/model'
+                                    '/MobileNetSSD_deploy.caffemodel'))
 classes = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle",
            "bus", "car", "cat", "chair", "cow", "diningtable",
            "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
            "sofa", "train", "tvmonitor"]
 
-conf = .4 # set minimum confidence for SSD bounding box
+conf = .5  # set minimum confidence for SSD bounding box
 
-feature_cnn = load_model('./object_detection/feature_extraction/headlessVGG16.h5')
+feature_cnn = vs.load_headless_pretrained_model()
 
 # %% Load lookup dictionary and file mapping
 with open('./object_detection/feature_extraction/master_dict.json', 'r') as f:
@@ -38,6 +39,7 @@ with open('./object_detection/feature_extraction/ref_img_filemapping_no_aug.json
 
 ref_db = annoy.AnnoyIndex(4096, metric='angular')
 ref_db.load('./object_detection/feature_extraction/ref_img_index_no_aug.ann')
+
 
 def retrieve_img_data(file):
 
@@ -107,14 +109,14 @@ def retrieve_img_data(file):
 
             # %% Get annoy result
             inds = []
-            dists =[]
+            dists = []
             for x in feats:
                 ind, dist = ref_db.get_nns_by_vector(x, 1,
                                                      include_distances = True)
                 inds.extend(ind)
                 dists.extend(dist)
         else:
-            inds = ("I couldn't find any bottles. Try a new picture/ "
+            inds = ("I couldn't find any bottles. Try a new picture. "
                     "Make sure that each bottle is clearly visible "
                     "and that the labels are facing the camera.")
             dists = []
@@ -123,9 +125,10 @@ def retrieve_img_data(file):
         return inds, dists, bboxes
 
     except Exception as e:
-        inds = ("I had trouble trying to process that image. "
-               "Try uploading it again, and make sure that "
-               "each bottle is visible, andthe labels are facing the camera.")
+        inds = ("I had trouble with that image. Make sure it's "
+                "a supported format, and that the bottles and labels "
+                "are clearly visible, and try again.")
         dists = []
         bboxes = []
+
         return inds, dists, bboxes

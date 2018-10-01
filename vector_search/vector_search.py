@@ -1,22 +1,23 @@
-import logging
 import os
 import json
-import time
 
 import h5py
 import numpy as np
 
 from annoy import AnnoyIndex
 from keras import optimizers
-from keras.layers import Dense, BatchNormalization, Activation, Dropout
-from keras.losses import cosine_proximity
+from keras.layers import Dense, BatchNormalization
+from keras.layers import Activation, Dropout
+from keras.losses import categorical_crossentropy
 from keras.preprocessing import image
 from keras.models import Model
+from PIL import Image as PILImage
 from keras.applications.vgg16 import VGG16
 from keras.applications.vgg16 import preprocess_input
+import tensorflow as tf
 
-logger = logging.getLogger()
-logger.setLevel(logging.INFO)
+
+graph = tf.get_default_graph()
 
 
 def load_imgs(file_list):
@@ -35,6 +36,7 @@ def load_imgs(file_list):
 
     return image_list
 
+
 def load_headless_pretrained_model():
     """
     Loads the pretrained version of VGG with the last layer cut off
@@ -45,32 +47,49 @@ def load_headless_pretrained_model():
                   outputs=pretrained_vgg16.get_layer('fc2').output)
     return model
 
-def generate_features(image_file_list, model):
+def generate_features_file(image_file_list, model):
     """
     Takes in a list of image files, and a trained model.
     Returns the activations of the last layer for each image
     :param image_paths: list of image files
     :param model: pre-trained model
-    :return: array of last-layer activations, and mapping from array_index to file_path
+    :return: array of last-layer activations,
+        and mapping from array_index to file_path
     """
-    start = time.time()
     images = np.zeros(shape=(len(image_file_list), 224, 224, 3))
     file_mapping = {i: f for i, f in enumerate(image_file_list)}
 
     # We load all our dataset in memory because it is relatively small
     for i, f in enumerate(image_file_list):
+        print("Loading image ",i,"/",str(len(image_file_list)))
         img = image.load_img(f, target_size=(224, 224))
         x_raw = image.img_to_array(img)
         x_expand = np.expand_dims(x_raw, axis=0)
         images[i, :, :, :] = x_expand
-
-    logger.info("%s images loaded" % len(images))
+    print("Preprocessing images")
     inputs = preprocess_input(images)
-    logger.info("Images preprocessed")
+    print("Getting features")
     images_features = model.predict(inputs)
-    end = time.time()
-    logger.info("Inference done, %s Generation time" % (end - start))
+    print("All done!")
     return images_features, file_mapping
+
+def generate_features_img(PIL_image, model):
+    """
+    Takes a PIL image in memory, and a trained model.
+    Returns the activations of the last layer for each image.
+    :param image_array: image array already in memory
+    :param model: pre-trained model
+    :return: array of last-layer activations
+    """
+    resize = PIL_image.resize((224, 224), PILImage.NEAREST)
+    x_raw = image.img_to_array(resize)
+    x_expand = np.expand_dims(x_raw, axis=0)
+    input = preprocess_input(x_expand)
+    global graph, bike_labels
+    with graph.as_default():
+        images_features = model.predict(input)
+
+    return images_features
 
 
 def save_features(features_filename, features, mapping_filename, file_mapping):
@@ -81,10 +100,10 @@ def save_features(features_filename, features, mapping_filename, file_mapping):
     :param mapping_filename: path to save mapping to
     :param file_mapping: mapping from array_index to file_path/plaintext_word
     """
+    print("Saving files")
     np.save('%s.npy' % features_filename, features)
     with open('%s.json' % mapping_filename, 'w') as index_file:
         json.dump(file_mapping, index_file)
-    logger.info("Weights saved")
 
 
 def load_features(features_filename, mapping_filename):
@@ -112,6 +131,7 @@ def index_features(features, n_trees=1000, dims=4096, is_dict=False):
     """
     feature_index = AnnoyIndex(dims, metric='angular')
     for i, row in enumerate(features):
+        print("Adding item ", i, '/', features.shape[0])
         vec = row
         if is_dict:
             vec = features[row]
@@ -119,24 +139,16 @@ def index_features(features, n_trees=1000, dims=4096, is_dict=False):
     feature_index.build(n_trees)
     return feature_index
 
-
-def build_word_index(word_vectors):
-    """
-    Builds a fast index out of a list of pretrained word vectors
-    :param word_vectors: a list of pre-trained word vectors loaded from a file
-    :return: an Annoy tree of indexed word vectors and a mapping from the Annoy index to the word string
-    """
-    logging.info("Creating mapping and list of features")
-    word_list = [(i, word) for i, word in enumerate(word_vectors)]
-    word_mapping = {k: v for k, v in word_list}
-    word_features = [word_vectors[lis[1]] for lis in word_list]
-    logging.info("Building tree")
-    word_index = index_features(word_features, n_trees=20, dims=300)
-    logging.info("Tree built")
-    return word_index, word_mapping
+def load_annoy(filename, dims):
+    '''
+    Loads a pre-indexed annoy indexed database.
+    '''
+    a = AnnoyIndex(dims, metric='angular')
+    a.load(filename)
+    return a
 
 
-def search_index_by_key(key, feature_index, item_mapping, top_n=10):
+def search_index_by_key(key, feature_index, item_mapping, top_n=1):
     """
     Search an Annoy index by key, return n nearest items
     :param key: the index of our item in our array of features
@@ -149,7 +161,7 @@ def search_index_by_key(key, feature_index, item_mapping, top_n=10):
     return [[a, item_mapping[a], distances[1][i]] for i, a in enumerate(distances[0])]
 
 
-def search_index_by_value(vector, feature_index, item_mapping, top_n=10):
+def search_index_by_value(vector, feature_index, item_mapping, top_n=1):
     """
     Search an Annoy index by value, return n nearest items
     :param vector: the index of our item in our array of features
@@ -160,6 +172,7 @@ def search_index_by_value(vector, feature_index, item_mapping, top_n=10):
     """
     distances = feature_index.get_nns_by_vector(vector, top_n, include_distances=True)
     return [[a, item_mapping[a], distances[1][i]] for i, a in enumerate(distances[0])]
+
 
 
 def get_weighted_features(class_index, images_features):
@@ -177,13 +190,17 @@ def get_weighted_features(class_index, images_features):
 
 def get_class_weights_from_vgg(save_weights=False, filename='class_weights'):
     """
-    Get the class weights for the final predictions layer as a numpy martrix, and potentially save it to disk.
+    Get the class weights for the final predictions layer as a numpy martrix,
+        and potentially save it to disk.
     :param save_weights: flag to save to disk
     :param filename: filename if we save to disc
-    :return: n_classes*4096 array of weights from the penultimate layer to the last layer in Keras' pretrained VGG
+    :return: n_classes*4096 array of weights from the penultimate layer to
+        the last layer in Keras' pretrained VGG
     """
     model_weights_path = os.path.join(os.environ.get('HOME'),
-                                      '.keras/models/vgg16_weights_tf_dim_ordering_tf_kernels.h5')
+                                      ('.keras/models/',
+                                       'vgg16_weights_tf_dim_ordering',
+                                       '_tf_kernels.h5'))
     weights_file = h5py.File(model_weights_path, 'r')
     weights_file.get('predictions').get('predictions_W_1:0')
     final_weights = weights_file.get('predictions').get('predictions_W_1:0')
@@ -195,50 +212,41 @@ def get_class_weights_from_vgg(save_weights=False, filename='class_weights'):
     return class_weights
 
 
-def setup_custon_model(intermediate_dim=2000, word_embedding_dim=300):
+def setup_custon_model(ncat):
     """
-    Builds a custom model taking the fc2 layer of VGG16 and adding two dense layers on top
-    :param intermediate_dim: dimension of the intermediate dense layer
-    :param word_embedding_dim: dimension of the final layer, which should match the size of our word embeddings
-    :return: a Keras model with the backbone frozen, and the upper layers ready to be trained
+    Builds a custom model taking the fc2 layer of VGG16 and adding two dense
+        layers and a final categorization layer on top.
+    :param ncat: number of categories for final categorizaiton layer
+    :param train_filepath: path to training pictures (organized into subfolders
+        by category)
+    :param validation_filepath: path to validation pictures (as above)
+    :param n_train_samples: number of training images
+    :param n_validation_samples: number of validation samples
+    :return: a Keras model with the backbone frozen, and the upper
+        layers ready to be trained
     """
-    headless_pretrained_vgg16 = VGG16(weights='imagenet', include_top=True, input_shape=(224, 224, 3))
+    headless_pretrained_vgg16 = VGG16(weights='imagenet', include_top=True,
+                                      input_shape=(224, 224, 3))
     x = headless_pretrained_vgg16.get_layer('fc2').output
 
-    # We do not re-train VGG entirely here, just to get to a result quicker (fine-tuning the whole network would
-    # lead to better results)
+    # We do not re-train VGG entirely here, just to get to a result quicker
+    # (fine-tuning the whole network would lead to better results)
     for layer in headless_pretrained_vgg16.layers:
         layer.trainable = False
 
-    image_dense1 = Dense(intermediate_dim, name="image_dense1")(x)
+    # build a classifier model to put on top of the convolutional model
+    image_dense1 = Dense(2000, name="image_dense1")(x)
     image_dense1 = BatchNormalization()(image_dense1)
     image_dense1 = Activation("relu")(image_dense1)
     image_dense1 = Dropout(0.5)(image_dense1)
 
-    image_dense2 = Dense(word_embedding_dim, name="image_dense2")(image_dense1)
-    image_output = BatchNormalization()(image_dense2)
+    output = Dense(ncat, activation='softmax',
+                   name='predictions')(image_dense1)
 
-    complete_model = Model(inputs=[headless_pretrained_vgg16.input], outputs=image_output)
-    sgd = optimizers.SGD(lr=0.01, decay=1e-6, momentum=0.9, nesterov=True)
-    complete_model.compile(optimizer=sgd, loss=cosine_proximity)
+    complete_model = Model(inputs=[headless_pretrained_vgg16.input],
+                           outputs=output)
+    adam = optimizers.Adam()
+    complete_model.compile(optimizer=adam, loss=categorical_crossentropy,
+                           metrics=['accuracy'])
+
     return complete_model
-
-
-def load_glove_vectors(glove_dir, glove_name='glove.6B.300d.txt'):
-    """
-    Mostly from keras docs here https://blog.keras.io/using-pre-trained-word-embeddings-in-a-keras-model.html
-    Download GloVe vectors here http://nlp.stanford.edu/data/glove.6B.zip
-    :param glove_name: name of pre-trained file
-    :param glove_dir: directory in witch the glove file is located
-    :return:
-    """
-    f = open(os.path.join(glove_dir, glove_name))
-    embeddings_index = {}
-    for line in f:
-        values = line.split()
-        word = values[0]
-        coefs = np.asarray(values[1:], dtype='float32')
-        embeddings_index[word] = coefs
-    f.close()
-    print('Found %s word vectors.' % len(embeddings_index))
-    return embeddings_index
