@@ -15,30 +15,26 @@ import tensorflow as tf
 # %% Load CNNs
 
 # Load net for SDD image segmentation
-ssd_cnn = cv2.dnn.readNetFromCaffe(('./object_detection/ref_img_cropping/model'
-                                    '/MobileNetSSD_deploy.prototxt.txt'),
-                                   ('./object_detection/ref_img_cropping/model'
-                                    '/MobileNetSSD_deploy.caffemodel'))
+ssd_cnn = cv2.dnn.readNetFromCaffe(('object_detection/ref_img_cropping/model/MobileNetSSD_deploy.prototxt.txt'),
+                                   ('object_detection/ref_img_cropping/model/MobileNetSSD_deploy.caffemodel'))
 classes = ["background", "aeroplane", "bicycle", "bird", "boat", "bottle",
            "bus", "car", "cat", "chair", "cow", "diningtable",
            "dog", "horse", "motorbike", "person", "pottedplant", "sheep",
            "sofa", "train", "tvmonitor"]
 
 conf = .5  # set minimum confidence for SSD bounding box
+max_dist = .8 # Maximum cosine distance tolerance to return a match
 
 feature_cnn = vs.load_headless_pretrained_model()
 
 # %% Load lookup dictionary and file mapping
-with open('./object_detection/feature_extraction/master_dict.json', 'r') as f:
-    master_dict = json.load(f)
-
-with open('./object_detection/feature_extraction/ref_img_filemapping_no_aug.json', 'r') as f:
+with open('object_detection/feature_extraction/ref_img_filemapping_no_aug.json', 'r') as f:
     mapping = json.load(f)
 
 # %% Load annoy database
 
 ref_db = annoy.AnnoyIndex(4096, metric='angular')
-ref_db.load('./object_detection/feature_extraction/ref_img_index_no_aug.ann')
+ref_db.load('object_detection/feature_extraction/ref_img_index_no_aug.ann')
 
 
 def retrieve_img_data(file):
@@ -108,26 +104,45 @@ def retrieve_img_data(file):
             feats = [x.tolist() for x in feats]
 
             # %% Get annoy result
-            inds = []
+            get_inds = []
             dists = []
             for x in feats:
                 ind, dist = ref_db.get_nns_by_vector(x, 1,
                                                      include_distances = True)
-                inds.extend(ind)
+                get_inds.extend(ind)
                 dists.extend(dist)
+
+            # Check distances to see if they exceed the max tolerance
+
+            # Get indices of bad matches
+            bad_matches = []
+            for i, d in enumerate(dists):
+                if d > max_dist:
+                    bad_matches.append(i)
+
+            # Get rid of bad matches
+            inds = []
+            for i, idx in enumerate(get_inds):
+                if i in bad_matches:
+                    continue
+                else:
+                    inds.append(idx)
+
+            if len(inds) == 0:
+                inds = "No match"
+                dists = []
+                bboxes = []
+
+
         else:
-            inds = ("I couldn't find any bottles. Try a new picture. "
-                    "Make sure that each bottle is clearly visible "
-                    "and that the labels are facing the camera.")
+            inds = "None"
             dists = []
             bboxes = []
 
         return inds, dists, bboxes
 
     except Exception as e:
-        inds = ("I had trouble with that image. Make sure it's "
-                "a supported format, and that the bottles and labels "
-                "are clearly visible, and try again.")
+        inds = "None"
         dists = []
         bboxes = []
 
