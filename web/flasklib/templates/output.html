@@ -19,8 +19,10 @@
 
 <body>
 
+  <!-- Navbar -->
+
   <nav class="navbar navbar-expand-lg navbar-light bg-light">
-    <a class="navbar-brand" href="#" style="font-family:Georgia, 'Times New Roman', Times, serif"><strong>
+    <a class="navbar-brand" href="/index" style="font-family:Georgia, 'Times New Roman', Times, serif"><strong>
         <font color='red'>cocktail</font>lVision
       </strong></a>
     <button class="navbar-toggler" type="button" data-toggle="collapse" data-target="#navbarSupportedContent"
@@ -30,9 +32,15 @@
 
     <div class="collapse navbar-collapse" id="navbarSupportedContent">
       <ul class="navbar-nav mr-auto">
+
         <li class="nav-item active">
           <a class="nav-link" href="/index">Home <span class="sr-only">(current)</span></a>
         </li>
+
+        <li class="nav-item active">
+          <a class="nav-link" href="/me">About me <span class="sr-only"></span></a>
+        </li>
+
       </ul>
     </div>
   </nav>
@@ -55,13 +63,16 @@
   <br><br>
 
 
-  <!--Uploaded image and recipe output-->
+  <!--Uploaded image -->
   <div class="container">
     <div class="row">
       <div class="col-3" style="padding-left: 0px;  padding-right: 0px; float: left;">
         <div class="h3">Your pic:</div>
         <img src="{{ filepath }}" class="img-fluid" alt="" style="padding-left: 0px;  padding-right: 0px;">
       </div>
+
+
+
 
       <!-- Recipe output -->
       <div class="col-5">
@@ -80,6 +91,7 @@
     </div>
 
     <!--Shake it up to get a new cocktail recipe-->
+    {% if ingredient_table != "" %}
     <div class="row">
       <div class="col-3"></div>
       <div class="col-5">
@@ -89,9 +101,9 @@
             <button type="submit" class="btn btn-dark">Shake it up!</button>
           </div>
         </form>
-
       </div>
     </div>
+    {% endif %}
   </div>
 
 

@@ -19,16 +19,18 @@ web/uploads/
 /demo_files/
 /img_scraping/validation/
 /cocktail/
-*json
-*ann
-*npy
 *txt
-*csv
+.Rhistory
 *jpg
 *png
+*foo*
+*ann
+*npy
+*pyc
+*json
+*csv
 *pdf
-*.Rhistory
-*.h5
+*h5
 
 
 # General
