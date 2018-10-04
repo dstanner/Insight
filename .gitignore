@@ -41,7 +41,11 @@ item.json
 /object_detection/augmented_annoy_index_results.txt
 /object_detection/augmented_file_mapping.json
 object_detection/pic_lookup_dictionary.json
-
+.Rhistory
+*.jpg
+*.png
+foo*
+object_detection/augmented_category_results.txt
 
 
 # General

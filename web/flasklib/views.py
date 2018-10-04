@@ -70,6 +70,7 @@ def upload_file():
                             "are clearly visible, "
                             "and that the labels are facing the camera.")
             ingredient_table = ""
+            bottles = ''
         elif inds == "None":
             cocktail_name = "I didn't detect any bottles."
             instructions = ("I couldn't see any bottles in your picture.\n\n"
@@ -78,13 +79,31 @@ def upload_file():
                             "are clearly visible, "
                             "and that the labels are facing the camera.")
             ingredient_table = ""
+            bottles = ''
         else:
             output = lookup_functions.return_output(inds)
+
+            # Get return values for liquor types
+            if len(output) == 0:
+                bottles = ''
+            elif len(output) == 1:
+                bottles = list(output)
+            elif len(output) == 2:
+                out = list(output)
+                bottles = ' and '.join(out)
+            else:
+                out = list(output)
+                last = out[-1]
+                not_last = out[:-2]
+                not_text = ', '.join(not_last)
+                bottles = not_text + ', and ' + last
+
             global choices
             choices = lookup_functions.get_choices(output)
             recipe = lookup_functions.get_recipe(choices, recipe_idx)
             cocktail_name, instructions, ingredient_table = lookup_functions.format_recipe(recipe)
 
+        global display_path
         display_path = os.path.join(app.config['TEMP_FOLDER'], filename)
 
     return render_template("output.html",
@@ -99,16 +118,38 @@ def new_recipe():
 
     # update recipe index
     global recipe_idx
-    recipe_idx += 1
+    global choices
+    global display_path
+    if recipe_idx < len(choices)-1:
+        recipe_idx += 1
 
-    # Get a new recipe for that index
-    recipe = lookup_functions.get_recipe(choices, recipe_idx)
-    cocktail_name, instructions, ingredient_table = lookup_functions.format_recipe(recipe)
+        # Get a new recipe for that index
+        recipe = lookup_functions.get_recipe(choices, recipe_idx)
+        cocktail_name, instructions, ingredient_table = lookup_functions.format_recipe(recipe)
 
-    display_path = os.path.join(app.config['TEMP_FOLDER'], filename)
+        display_path = os.path.join(app.config['TEMP_FOLDER'], filename)
 
-    return render_template("shake.html",
-                           cocktail_name=cocktail_name,
-                           instructions=instructions,
-                           ingredient_table=ingredient_table,
-                           filepath=display_path)
+        return render_template("shake.html",
+                               cocktail_name=cocktail_name,
+                               instructions=instructions,
+                               ingredient_table=ingredient_table,
+                               filepath=display_path)
+
+    else:
+        recipe_idx = -1
+        cocktail_name = "That's all I've got for you"
+        instructions = ("I don't have any more recipes for the picture "
+                        "you uploaded. Try uploading the picture "
+                        "again, or upload a new picture for more "
+                        "recipes.")
+        ingredient_table = ("")
+
+        return render_template("shake.html",
+                               cocktail_name=cocktail_name,
+                               instructions=instructions,
+                               ingredient_table=ingredient_table,
+                               filepath=display_path)
+
+@app.route('/me')
+def show_aboutme():
+    return render_template("me.html")
