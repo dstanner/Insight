@@ -57,7 +57,9 @@
     "idDrink": "11020",
     "alcohol1": "Whiskey"
 }, {
-    "idDrink": "11021"
+    "idDrink": "11021",
+    "alcohol1": "Whiskey",
+    "alcohol2": "Brandy"
 }, {
     "idDrink": "11022",
     "alcohol1": "Gin"
@@ -812,7 +814,8 @@
     "alcohol1": "Rum"
 }, {
     "idDrink": "13775",
-    "alcohol1": "Anise liqueur"
+    "alcohol1": "Anise liqueur",
+    "alcohol2": "Brandy"
 }, {
     "idDrink": "13807",
     "alcohol1": "Peppermint schnapps",
@@ -1213,7 +1216,8 @@
     "alcohol2": "Midori/Melon liqueur"
 }, {
     "idDrink": "16250",
-    "alcohol1": "Rum"
+    "alcohol1": "Rum",
+    "alcohol2": "Brandy"
 }, {
     "idDrink": "16262",
     "alcohol1": "Whiskey",
@@ -1525,9 +1529,6 @@
     "idDrink": "17209",
     "alcohol1": "Rum",
     "alcohol2": "Anise liqueur"
-}, {
-    "idDrink": "17210",
-    "alcohol1": "Gin"
 }, {
     "idDrink": "17211",
     "alcohol1": "Rum"

@@ -36,12 +36,17 @@ item.json
 /demo_files/
 /img_scraping/validation/
 /cocktail/
-/object_detection/feature_extraction/
-/object_detection/augmented_annoy_distance_results.txt
-/object_detection/augmented_annoy_index_results.txt
-/object_detection/augmented_file_mapping.json
-object_detection/pic_lookup_dictionary.json
-
+*txt
+.Rhistory
+*jpg
+*png
+*foo*
+*ann
+*npy
+*pyc
+*json
+*csv
+*pdf
 
 
 # General
