@@ -27,10 +27,11 @@ web/uploads/
 *ann
 *npy
 *pyc
-*json
 *csv
 *pdf
 *h5
+/object_detection/*.json
+/object_detection/feature_extraction/*.json 
 
 
 # General
