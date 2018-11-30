@@ -699,9 +699,6 @@
 }, {
     "idDrink": "13214"
 }, {
-    "idDrink": "13222",
-    "alcohol1": "Irish cream (Bailey's)"
-}, {
     "idDrink": "13254",
     "alcohol1": "Vodka"
 }, {
@@ -717,9 +714,6 @@
     "alcohol1": "Vodka"
 }, {
     "idDrink": "13389"
-}, {
-    "idDrink": "13395",
-    "alcohol1": "Midori/Melon liqueur"
 }, {
     "idDrink": "13423",
     "alcohol1": "Vodka",
@@ -768,10 +762,6 @@
     "alcohol1": "Peppermint schnapps",
     "alcohol2": "Coffee liqueur (Kahlua)",
     "alcohol3": "Irish cream (Bailey's)"
-}, {
-    "idDrink": "13825",
-    "alcohol1": "Coffee liqueur (Kahlua)",
-    "alcohol2": "Irish cream (Bailey's)"
 }, {
     "idDrink": "13847",
     "alcohol1": "Whiskey",
@@ -1237,8 +1227,6 @@
     "alcohol1": "Vodka",
     "alcohol2": "Coffee liqueur (Kahlua)"
 }, {
-    "idDrink": "17020"
-}, {
     "idDrink": "17027",
     "alcohol1": "Chambord/raspberry liqueur"
 }, {
@@ -1246,9 +1234,6 @@
 }, {
     "idDrink": "17044",
     "alcohol1": "Vodka"
-}, {
-    "idDrink": "17060",
-    "alcohol1": "Rum"
 }, {
     "idDrink": "17065",
     "alcohol1": "Rum"

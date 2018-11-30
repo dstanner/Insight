@@ -3026,17 +3026,6 @@
     "strMeasure2": "1 oz ",
     "strMeasure3": "1-2 tblsp "
 }, {
-    "idDrink": "13222",
-    "strDrink": "Big Red",
-    "strCategory": "Shot",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Shot glass",
-    "strInstructions": "Pour ingredients into 1 ounce shot glass",
-    "strIngredient1": "Irish cream (Bailey's)",
-    "strIngredient2": "Goldschlager",
-    "strMeasure1": "1/2 oz ",
-    "strMeasure2": "1/2 oz "
-}, {
     "idDrink": "13254",
     "strDrink": "Moscow Mule",
     "strCategory": "Punch / Party Drink",
@@ -3099,19 +3088,6 @@
     "strIngredient2": "Cider",
     "strMeasure1": "1/2 pint ",
     "strMeasure2": "1/2 pint sweet or dry "
-}, {
-    "idDrink": "13395",
-    "strDrink": "Bob Marley",
-    "strCategory": "Shot",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Shot glass",
-    "strInstructions": "Layer in a 2 oz shot glass or pony glass",
-    "strIngredient1": "Midori/Melon liqueur",
-    "strIngredient2": "J\u00e4germeister",
-    "strIngredient3": "Goldschlager",
-    "strMeasure1": "1/2 oz ",
-    "strMeasure2": "1/2 oz ",
-    "strMeasure3": "1/2 oz "
 }, {
     "idDrink": "13423",
     "strDrink": "Atlantic Sun",
@@ -3305,23 +3281,6 @@
     "strIngredient2": "Coffee liqueur (Kahlua)",
     "strIngredient3": "Irish cream (Bailey's)"
 }, {
-    "idDrink": "13825",
-    "strDrink": "Midnight Manx",
-    "strCategory": "Ordinary Drink",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Old-fashioned glass",
-    "strInstructions": "Fill a mixer with ice and add Baileys, Kahlua, Goldshlager, and cream. Shake for 5 seconds and Strain into a double rocks glass filled with ice. Add chilled coffee Stir and enjoy!",
-    "strIngredient1": "Coffee liqueur (Kahlua)",
-    "strIngredient2": "Irish cream (Bailey's)",
-    "strIngredient3": "Goldschlager",
-    "strIngredient4": "Cream or half and half",
-    "strIngredient5": "Coffee",
-    "strMeasure1": "1 oz ",
-    "strMeasure2": "1 oz ",
-    "strMeasure3": "dash ",
-    "strMeasure4": "2 oz ",
-    "strMeasure5": "2 oz Hazlenut "
-}, {
     "idDrink": "13837",
     "strDrink": "Kir Royale",
     "strCategory": "Ordinary Drink",
@@ -3421,20 +3380,7 @@
     "strIngredient2": "Vodka",
     "strMeasure1": "1 oz white ",
     "strMeasure2": "1 oz "
-}, {
-    "idDrink": "14053",
-    "strDrink": "Mother's Milk",
-    "strCategory": "Shot",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Shot glass",
-    "strInstructions": "Shake over ice, strain. Serves two.",
-    "strIngredient1": "Goldschlager",
-    "strIngredient2": "Butterscotch schnapps",
-    "strIngredient3": "Cream or half and half",
-    "strMeasure1": "1 oz ",
-    "strMeasure2": "1 oz ",
-    "strMeasure3": "1 oz "
-}, {
+},  {
     "idDrink": "14065",
     "strDrink": "Zippy's Revenge",
     "strCategory": "Cocktail",
@@ -5195,17 +5141,6 @@
     "strMeasure3": "1 dash ",
     "strMeasure4": "Fill with "
 }, {
-    "idDrink": "17020",
-    "strDrink": "Auburn Headbanger",
-    "strCategory": "Shot",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Shot glass",
-    "strInstructions": "Mix in spread glass over ice. Strain and pour in shot glass. Sit down before shotting. ENJOY!",
-    "strIngredient1": "J\u00e4germeister",
-    "strIngredient2": "Goldschlager",
-    "strMeasure1": "1 oz ",
-    "strMeasure2": "1 oz "
-}, {
     "idDrink": "17027",
     "strDrink": "Zima Blaster",
     "strCategory": "Ordinary Drink",
@@ -5244,21 +5179,6 @@
     "strMeasure3": "1 1/2 oz instant ",
     "strMeasure4": "2 oz ",
     "strMeasure5": "1 fifth "
-}, {
-    "idDrink": "17060",
-    "strDrink": "24k nightmare",
-    "strCategory": "Shot",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Shot glass",
-    "strInstructions": "Add over ice,shake and pour.",
-    "strIngredient1": "Goldschlager",
-    "strIngredient2": "J\u00e4germeister",
-    "strIngredient3": "Rumple Minze",
-    "strIngredient4": "Rum",
-    "strMeasure1": "1/2 oz ",
-    "strMeasure2": "1/2 oz ",
-    "strMeasure3": "1/2 oz ",
-    "strMeasure4": "1/2 oz Bacardi "
 }, {
     "idDrink": "17065",
     "strDrink": "Caribbean Boilermaker",
@@ -6465,23 +6385,6 @@
     "strMeasure2": "1 1/2 oz",
     "strMeasure3": "1 tsp",
     "strMeasure4": "2 dashes"
-}, {
-    "idDrink": "17266",
-    "strDrink": "Oatmeal Cookie",
-    "strCategory": "Cocktail",
-    "strAlcoholic": "Alcoholic",
-    "strGlass": "Mason jar",
-    "strInstructions": "Just mix it all together. It's meant to be a shot, but it works just fine as a proper adult-sized drink over lots of ice.  Tastes like an oatmeal cookie.",
-    "strIngredient1": "Coffee liqueur (Kahlua)",
-    "strIngredient2": "Irish cream (Bailey's)",
-    "strIngredient3": "Butterscotch schnapps",
-    "strIngredient4": "Jagermeister",
-    "strIngredient5": "Goldschlager",
-    "strMeasure1": "2 parts",
-    "strMeasure2": "2 parts",
-    "strMeasure3": "4 parts",
-    "strMeasure4": "1 part",
-    "strMeasure5": "1/2 part"
 }, {
     "idDrink": "17267",
     "strDrink": "Bahama Mama",
